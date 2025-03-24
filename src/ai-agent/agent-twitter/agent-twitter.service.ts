@@ -1,3 +1,4 @@
+import { ImageInformation, SendATweetDto } from './dto/agent-twitter.dto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
 import { ConfigService } from '@nestjs/config';
@@ -5,7 +6,6 @@ import { Cookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import * as fs from 'fs';
-import { ImageInformation, SendATweetDto } from './dto/agent-twitter.dto';
 
 @Injectable()
 export class AgentTwitterService implements OnModuleInit {
@@ -36,13 +36,19 @@ export class AgentTwitterService implements OnModuleInit {
     }
   }
 
-   // 发送推文
-   async sendATweet(body: SendATweetDto<ImageInformation>){
+  // 发送推文
+  async sendATweet(body: SendATweetDto<ImageInformation>) {
     // 处理图片
     const mediaData = this.imageProcess(body.imageData);
+    if (mediaData.length === 0) {
+      return false;
+    }
     // 处理文案
     const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
-    
+    if (!tweet) {
+      return false;
+    }
+
     // 发送推文
     const sendTweetResults = await this.scraper.sendTweet(
       tweet,
@@ -112,19 +118,26 @@ export class AgentTwitterService implements OnModuleInit {
 
   // 推文处理
   private tweetProcess(tweetData: string, tweetUrl: string): string {
+    // TODO:生成推文
+    if (1 > 1) {
+      this.logger.error(`文案处理失败`);
+    }
     return tweetData + tweetUrl;
   }
 
   // 推文图片处理
   private imageProcess(imageData: ImageInformation) {
     // TODO:生成图片
-    const uuid = `WechatIMG6072`; //uuidv4();
-    const imageUrl = uuid + '.jpg';
-    return [
-      {
-        data: fs.readFileSync(imageUrl),
-        mediaType: 'image/jpeg',
-      },
-    ];
+    const imageName = `WechatIMG6072`; //uuidv4();
+    const imageUrl = imageName + '.jpg';
+    var imageFileSync: Buffer<ArrayBufferLike>;
+    try {
+      imageFileSync = fs.readFileSync(imageUrl);
+    } catch (error) {
+      this.logger.error(`图片加载失败:${error}`);
+      return [];
+    }
+
+    return [{ data: imageFileSync, mediaType: 'image/jpeg' }];
   }
 }
