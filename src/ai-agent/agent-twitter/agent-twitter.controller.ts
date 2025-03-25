@@ -1,4 +1,4 @@
-import { Controller, HttpCode, Post, Body } from '@nestjs/common';
+import { Controller, HttpCode, Post, Body, BadRequestException } from '@nestjs/common';
 import { AgentTwitterService } from './agent-twitter.service';
 import { ImageInformation, SendATweetDto } from './dto/agent-twitter.dto';
 
@@ -14,7 +14,7 @@ export class AgentTwitterController {
       body.tweetData === '' ||
       body.tweetUrl === ''
     ) {
-      return false;
+      throw new BadRequestException(['sendATweet']);
     }
 
     return this.agentTwitterService.sendATweet(body);
