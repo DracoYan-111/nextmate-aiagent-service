@@ -61,12 +61,13 @@ export class AgentTwitterService implements OnModuleInit {
       undefined, // 回复的推文 ID
       mediaData,
     );
-    if (sendTweetResults) {
+
+    if (sendTweetResults.status === 200) {
       this.logger.log(`推文发送成功`);
-      return sendTweetResults;
+      return true;
     }
     this.logger.error(`推文发送失败`);
-    return sendTweetResults;
+    return false;
   }
 
   // 登录方法
