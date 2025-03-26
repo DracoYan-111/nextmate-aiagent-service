@@ -2,8 +2,9 @@ import { ImageInformation, SendATweetDto } from './dto/agent-twitter.dto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
 import { ConfigService } from '@nestjs/config';
+import { createCanvas, loadImage } from 'canvas';
 import { Cookie } from 'tough-cookie';
-import { v4 as uuidv4 } from 'uuid';
+import fetch from 'node-fetch';
 import { Agent } from 'alith';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -18,9 +19,8 @@ export class AgentTwitterService implements OnModuleInit {
   private scraper: Scraper;
   private twitterUsername: string;
   private twitterPassword: string;
-  private twitterEmail: string;
   private aiApiKey: string;
-  private aiModel: string; 
+  private aiModel: string;
   private aiBaseUrl: string;
 
   // 读取配置文件
@@ -28,7 +28,6 @@ export class AgentTwitterService implements OnModuleInit {
     this.scraper = new Scraper();
     this.twitterUsername = this.configService.get<string>('TWITTER_USERNAME')!;
     this.twitterPassword = this.configService.get<string>('TWITTER_PASSWORD')!;
-    this.twitterEmail = this.configService.get<string>('TWITTER_EMAIL')!;
     this.aiApiKey = this.configService.get<string>('AI_API_KEY')!;
     this.aiModel = this.configService.get<string>('AI_MODEL')!;
     this.aiBaseUrl = this.configService.get<string>('AI_BASE_URL')!;
@@ -45,16 +44,16 @@ export class AgentTwitterService implements OnModuleInit {
   // 发送推文
   async sendATweet(body: SendATweetDto<ImageInformation>) {
     // 处理图片
-    const mediaData = this.imageProcess(body.imageData);
-    if (mediaData.length === 0) {
-      return false;
-    }
+    const mediaData = await this.imageProcess(body.imageData);
+
     // 处理文案
     const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
-    if (tweet === `文案处理失败`) {
-      return false;
-    }
 
+    // 发送前确定登录状态
+    const isloggedIn = await this.scraper.isLoggedIn();
+    if (!isloggedIn) {
+      await this.login();
+    }
     // 发送推文
     const sendTweetResults = await this.scraper.sendTweet(
       tweet,
@@ -66,7 +65,6 @@ export class AgentTwitterService implements OnModuleInit {
       this.logger.log(`推文发送成功`);
       return true;
     }
-    this.logger.error(`推文发送失败`);
     return false;
   }
 
@@ -74,19 +72,14 @@ export class AgentTwitterService implements OnModuleInit {
   async login() {
     try {
       // Log in
-      await this.scraper.login(
-        this.twitterUsername,
-        this.twitterPassword,
-        this.twitterEmail,
-      );
-      const isLoggedIn = await this.scraper.isLoggedIn();
-      if (!isLoggedIn) this.logger.error('已登录 验证失败');
+      await this.scraper.login(this.twitterUsername, this.twitterPassword);
 
       // 登录成功后保存 cookies
       await this.saveCookies();
-      this.logger.log(`Twitter 登录成功:${this.twitterUsername}`);
+      const user = await this.scraper.me();
+      this.logger.log(`Twitter 登录成功:${user?.username}`);
     } catch (error) {
-      this.logger.error('Twitter 登录失败:', error);
+      throw new Error('Twitter 登录失败:', error);
     }
   }
 
@@ -139,29 +132,127 @@ export class AgentTwitterService implements OnModuleInit {
       const prompt =
         '对于下面这段文案进行润色并生成合适的推文，上下文背景是用户在我们的预测市场平台活动上获得了奖金，活动链接是：' +
         tweetUrl +
-        '，我们的官方Twitter账号要发推文进行奖赏播报，优化后的推文要求：\n1、长度符合Twitter的tweet要求 \n2、用户不需要@ \n3、推文内容要引人入胜，吸引用户点击推文里的活动链接 \n4、推文内容使用英文 \n记住输出内容只需要输出优化后的推文内容，其它的信息不要也不能输出，比如类似于推文字符统计等信息不要出现在输出内容中， 要优化的文案内容是：\n' +
+        '，我们的官方Twitter账号要发推文进行奖赏播报，优化后的推文要求：\n1、长度符合Twitter的tweet要求 \n2、用户不需要@ \n3、推文内容要引人入胜，吸引用户点击推文里的活动链接 \n4、推文内容使用英文 \n5、推文内容一定要包含#predictionMarket \n6、优化后的内容放在<<< >>>中， 要优化的文案内容是：\n' +
         originalTweet;
       const polished_tweet = agent.prompt(prompt);
-      return polished_tweet;
+      if (!polished_tweet) {
+        throw new Error('推文处理失败');
+      }
+
+      const matches = [...polished_tweet.matchAll(/<<<(.*?)>>>/gs)];
+      const results = matches.map((match) => match[1].trim());
+
+      return results[0];
     } catch (error) {
-      this.logger.error(`文案处理失败:${error}`);
-      return `文案处理失败`;
+      throw new Error('推文处理失败:', error);
     }
   }
 
   // 推文图片处理
-  private imageProcess(imageData: ImageInformation) {
-    // TODO:生成图片
-    const imageName = `WechatIMG6072`; //uuidv4();
-    const imageUrl = imageName + '.jpg';
-    var imageFileSync: Buffer<ArrayBufferLike>;
-    try {
-      imageFileSync = fs.readFileSync(imageUrl);
-    } catch (error) {
-      this.logger.error(`图片加载失败:${error}`);
-      return [];
-    }
+  private async imageProcess(imageData: ImageInformation) {
+    // 生成图片
+    const watermarks = [
+      {
+        id: '1742979401011',
+        text: '@' + imageData.userName,
+        color: '#fbf9f9',
+        gradientColor: '#0000FF',
+        useGradient: false,
+        fontSize: 68,
+        position: {
+          x: 242.012832742728,
+          y: 404,
+        },
+      },
+      {
+        id: '1742979409723',
+        text: imageData.imageDataOne,
+        color: '#fbf9f9',
+        gradientColor: '#0000FF',
+        useGradient: false,
+        fontSize: 360,
+        position: {
+          x: 217.9932863493932,
+          y: 798,
+        },
+      },
+      {
+        id: '1742979448517',
+        text: imageData.imageDataTwo,
+        color: '#fbf9f9',
+        gradientColor: '#0000FF',
+        useGradient: false,
+        fontSize: 68,
+        position: {
+          x: 256.0242348055064,
+          y: 956,
+        },
+      },
+    ];
+    const imageFileSync = await this.downloadImage(watermarks);
 
-    return [{ data: imageFileSync, mediaType: 'image/jpeg' }];
+    return [{ data: imageFileSync, mediaType: 'image/png' }];
+  }
+
+  private async downloadImage(watermarks: any[]) {
+    try {
+      // 从URL获取图片
+      const imageUrl =
+        'https://cdn.nextmate.ai/image/webapp/common/x-event.png';
+      const response = await fetch(imageUrl);
+      const imageBuffer = await response.buffer();
+
+      // 加载图片
+      const image = await loadImage(imageBuffer);
+
+      // 创建画布
+      const canvas = createCanvas(image.width, image.height);
+      const ctx = canvas.getContext('2d');
+
+      // 绘制原始图片
+      ctx.drawImage(image, 0, 0);
+
+      // 绘制水印
+      watermarks.forEach((watermark) => {
+        // 设置字体
+        ctx.font = `bold ${watermark.fontSize}px Inter`;
+
+        const { x, y } = watermark.position;
+        const textWidth = ctx.measureText(watermark.text).width;
+
+        if (watermark.useGradient) {
+          // 创建渐变
+          const gradient = ctx.createLinearGradient(
+            x,
+            y - watermark.fontSize,
+            x + textWidth,
+            y,
+          );
+          gradient.addColorStop(0, watermark.color);
+          gradient.addColorStop(1, watermark.gradientColor);
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = watermark.color;
+        }
+
+        // 绘制白色描边
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.strokeText(watermark.text, x, y);
+
+        // 填充文本
+        ctx.fillText(watermark.text, x, y);
+      });
+
+      // 将画布转换为buffer
+      const buffer = canvas.toBuffer('image/png');
+      this.logger.log(`图片加载成功`);
+      // // 保存文件
+      // const fileName = 'watermarked-image.jpeg';
+      // fs.writeFileSync(fileName, buffer);
+      return buffer;
+    } catch (error) {
+      throw new Error(`图片处理失败:${error}`);
+    }
   }
 }
