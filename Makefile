@@ -44,7 +44,8 @@ docker-build-aiagent-backend-arm64:
 docker-publish-image:
 	docker push $(REGISTRY)/$(TARGET):$(ARCH)-$(VERSION)
 	docker push $(REGISTRY)/$(TARGET):$(ARCH)-latest
-	.PHONY: docker-publish-aiagent-backend
+	
+.PHONY: docker-publish-aiagent-backend
 docker-publish-aiagent-backend:
 	@$(MAKE) docker-publish-image TARGET="aiagent-backend"
 
