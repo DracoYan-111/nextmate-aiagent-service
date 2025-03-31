@@ -1,4 +1,4 @@
-import { IsObject, IsString } from 'class-validator';
+import { IsNumber, IsObject, IsString } from 'class-validator';
 
 export class SendATweetDto<T> {
   @IsString()
@@ -9,16 +9,42 @@ export class SendATweetDto<T> {
   tweetType: string; // 播报类型
 
   @IsObject()
-  imageData: T;
+  data: T;
 }
 
-export class ImageInformation {
+export class MultiplierEarning {
   @IsString()
   userName: string; // 用户名
+  @IsNumber()
+  multiplier: number; // 倍数
+  @IsNumber()
+  tokenAmount: number; // 代币数量
   @IsString()
-  imageDataOne: string; // 图片数据1
+  tokenSymbol: string; // 代币名称
+  @IsNumber()
+  usdAmount: number; // 美元数量
+}
+
+export class UsdEarning {
   @IsString()
-  imageDataTwo: string; // 图片数据2
+  userName: string; // 用户名
+  @IsNumber()
+  tokenAmount: number; // 代币数量
   @IsString()
-  imageDataThree: string; // 图片数据3
+  tokenSymbol: string; // 代币名称
+  @IsNumber()
+  usdAmount: number; // 美元数量
+}
+
+export class EventEarning {
+  @IsString()
+  userName: string; // 用户名
+  @IsNumber()
+  rank: number; // 排名
+  @IsNumber()
+  tokenAmount: number; // 代币数量
+  @IsString()
+  tokenSymbol: string; // 代币名称
+  @IsNumber()
+  usdAmount: number; // 美元数量
 }

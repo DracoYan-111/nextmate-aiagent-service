@@ -1,10 +1,14 @@
-import { ImageInformation, SendATweetDto } from './dto/agent-twitter.dto';
+import {
+  EventEarning,
+  MultiplierEarning,
+  SendATweetDto,
+  UsdEarning,
+} from './dto/agent-twitter.dto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
 import { ConfigService } from '@nestjs/config';
-import { createCanvas, loadImage } from 'canvas';
 import { Cookie } from 'tough-cookie';
-import fetch from 'node-fetch';
+import { ImageGenerationGuard } from 'src/util/image-generation';
 import { Agent } from 'alith';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -42,9 +46,11 @@ export class AgentTwitterService implements OnModuleInit {
   }
 
   // 发送推文
-  async sendATweet(body: SendATweetDto<ImageInformation>) {
+  async sendATweet(
+    body: SendATweetDto<MultiplierEarning | UsdEarning | EventEarning>,
+  ) {
     // 处理图片
-    const mediaData = await this.imageProcess(body.imageData);
+    const mediaData = await this.imageProcess(body.data);
 
     // 处理文案
     const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
@@ -149,110 +155,125 @@ export class AgentTwitterService implements OnModuleInit {
   }
 
   // 推文图片处理
-  private async imageProcess(imageData: ImageInformation) {
-    // 生成图片
-    const watermarks = [
+  private async imageProcess(
+    imageData: MultiplierEarning | UsdEarning | EventEarning,
+  ) {
+    // 基础属性
+    const watermarks: any[] = [
       {
         id: '1742979401011',
-        text: '@' + imageData.userName,
-        color: '#fbf9f9',
+        text: `@${imageData.userName}`,
+        color: '#ffffff',
         gradientColor: '#0000FF',
         useGradient: false,
-        fontSize: 68,
-        position: {
-          x: 242.012832742728,
-          y: 404,
-        },
-      },
-      {
-        id: '1742979409723',
-        text: imageData.imageDataOne,
-        color: '#fbf9f9',
-        gradientColor: '#0000FF',
-        useGradient: false,
-        fontSize: 360,
-        position: {
-          x: 217.9932863493932,
-          y: 798,
-        },
-      },
-      {
-        id: '1742979448517',
-        text: imageData.imageDataTwo,
-        color: '#fbf9f9',
-        gradientColor: '#0000FF',
-        useGradient: false,
-        fontSize: 68,
-        position: {
-          x: 256.0242348055064,
-          y: 956,
-        },
+        fontSize: 96,
+        position: { x: 170, y: 439 },
       },
     ];
-    const imageFileSync = await this.downloadImage(watermarks);
+
+    if ('multiplier' in imageData) {
+      watermarks.push(
+        {
+          id: '1742979409723',
+          text: `+${imageData.multiplier.toString()}%`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 369,
+          position: { x: 170, y: 830 },
+        },
+        {
+          id: '1742979448517',
+          text: `${imageData.tokenAmount.toString()} ${imageData.tokenSymbol} ($${imageData.usdAmount.toString()})`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 112,
+          position: { x: 170, y: 1027 },
+        },
+      );
+    } else if ('rank' in imageData) {
+      watermarks.push(
+        {
+          id: '1742979401834',
+          text: `ranks`,
+          color: '#ffffff',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 80,
+          position: { x: 170, y: 610 },
+        },
+        {
+          id: '1742979409723',
+          text: `#${imageData.rank.toString()}`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 100,
+          position: { x: 407, y: 610 },
+        },
+        {
+          id: '1742979447342',
+          text: `, potentially winning`,
+          color: '#ffffff',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 80,
+          position: { x: 541, y: 604 },
+        },
+        {
+          id: '1742979448517',
+          text: `$${imageData.usdAmount.toString()}`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 369,
+          position: { x: 170, y: 975 },
+        },
+        {
+          id: '1742979447462',
+          text: `(${imageData.tokenAmount.toString()} ${imageData.tokenSymbol})`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 112,
+          position: { x: 170, y: 1141 },
+        },
+      );
+    } else {
+      watermarks.push(
+        {
+          id: '174297944',
+          text: `win`,
+          color: '#ffffff',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 75,
+          position: { x: 670, y: 439 },
+        },
+        {
+          id: '1742979409723',
+          text: `$${imageData.usdAmount.toString()}`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 369,
+          position: { x: 170, y: 833 },
+        },
+        {
+          id: '1742979448517',
+          text: `(${imageData.tokenAmount.toString()} ${imageData.tokenSymbol})`,
+          color: '#EBD7FF',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 112,
+          position: { x: 170, y: 1019 },
+        },
+      );
+    }
+
+    const imageFileSync = await ImageGenerationGuard.downloadImage(watermarks);
 
     return [{ data: imageFileSync, mediaType: 'image/png' }];
-  }
-
-  private async downloadImage(watermarks: any[]) {
-    try {
-      // 从URL获取图片
-      const imageUrl =
-        'https://cdn.nextmate.ai/image/webapp/common/x-event.png';
-      const response = await fetch(imageUrl);
-      const imageBuffer = await response.buffer();
-
-      // 加载图片
-      const image = await loadImage(imageBuffer);
-
-      // 创建画布
-      const canvas = createCanvas(image.width, image.height);
-      const ctx = canvas.getContext('2d');
-
-      // 绘制原始图片
-      ctx.drawImage(image, 0, 0);
-
-      // 绘制水印
-      watermarks.forEach((watermark) => {
-        // 设置字体
-        ctx.font = `bold ${watermark.fontSize}px Inter`;
-
-        const { x, y } = watermark.position;
-        const textWidth = ctx.measureText(watermark.text).width;
-
-        if (watermark.useGradient) {
-          // 创建渐变
-          const gradient = ctx.createLinearGradient(
-            x,
-            y - watermark.fontSize,
-            x + textWidth,
-            y,
-          );
-          gradient.addColorStop(0, watermark.color);
-          gradient.addColorStop(1, watermark.gradientColor);
-          ctx.fillStyle = gradient;
-        } else {
-          ctx.fillStyle = watermark.color;
-        }
-
-        // 绘制白色描边
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.strokeText(watermark.text, x, y);
-
-        // 填充文本
-        ctx.fillText(watermark.text, x, y);
-      });
-
-      // 将画布转换为buffer
-      const buffer = canvas.toBuffer('image/png');
-      this.logger.log(`图片加载成功`);
-      // // 保存文件
-      // const fileName = 'watermarked-image.jpeg';
-      // fs.writeFileSync(fileName, buffer);
-      return buffer;
-    } catch (error) {
-      throw new Error(`图片处理失败:${error}`);
-    }
   }
 }
