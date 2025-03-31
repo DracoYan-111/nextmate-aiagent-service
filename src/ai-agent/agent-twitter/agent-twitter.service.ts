@@ -1,8 +1,6 @@
 import {
-  EventEarning,
-  MultiplierEarning,
+  Earning,
   SendATweetDto,
-  UsdEarning,
 } from './dto/agent-twitter.dto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
@@ -46,11 +44,9 @@ export class AgentTwitterService implements OnModuleInit {
   }
 
   // 发送推文
-  async sendATweet(
-    body: SendATweetDto<MultiplierEarning | UsdEarning | EventEarning>,
-  ) {
+  async sendATweet(body: SendATweetDto<Earning>) {
     // 处理图片
-    const mediaData = await this.imageProcess(body.data);
+    const mediaData = await this.imageProcess(body.tweetType, body.data);
 
     // 处理文案
     const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
@@ -68,10 +64,11 @@ export class AgentTwitterService implements OnModuleInit {
     );
 
     if (sendTweetResults.status === 200) {
-      this.logger.log(`推文发送成功`);
+      this.logger.log(`Tweet sent successfully`);
       return true;
+    }else{
+      throw new Error(`Tweet processing failed:${sendTweetResults}`);
     }
-    return false;
   }
 
   // 登录方法
@@ -83,9 +80,9 @@ export class AgentTwitterService implements OnModuleInit {
       // 登录成功后保存 cookies
       await this.saveCookies();
       const user = await this.scraper.me();
-      this.logger.log(`Twitter 登录成功:${user?.username}`);
+      this.logger.log(`Twitter login successful:${user?.username}`);
     } catch (error) {
-      throw new Error('Twitter 登录失败:', error);
+      throw new Error('Twitter login failed:', error);
     }
   }
 
@@ -99,9 +96,10 @@ export class AgentTwitterService implements OnModuleInit {
         JSON.stringify(cookies, null, 2),
         'utf-8',
       );
-      this.logger.log(`Cookies 保存成功`);
+      this.logger.log(`Cookies saved successfully`);
     } catch (error) {
-      this.logger.error(`Cookies 保存失败:${error}`);
+
+      this.logger.error(`Cookies save failed:${error}`);
     }
   }
 
@@ -114,10 +112,10 @@ export class AgentTwitterService implements OnModuleInit {
         (cookie) => `${Cookie.fromJSON(cookie)}`,
       );
       await this.scraper.setCookies(cookies);
-      this.logger.log(`Cookies 已加载`);
+      this.logger.log(`Cookies loaded`);
       return true;
     }
-    this.logger.log(`Cookies 加载失败`);
+    this.logger.log(`Cookies loading failed`);
     return false;
   }
 
@@ -142,7 +140,7 @@ export class AgentTwitterService implements OnModuleInit {
         originalTweet;
       const polished_tweet = agent.prompt(prompt);
       if (!polished_tweet) {
-        throw new Error('推文处理失败');
+        throw new Error('Tweet processing failed');
       }
 
       const matches = [...polished_tweet.matchAll(/<<<(.*?)>>>/gs)];
@@ -150,14 +148,12 @@ export class AgentTwitterService implements OnModuleInit {
 
       return results[0];
     } catch (error) {
-      throw new Error('推文处理失败:', error);
+      throw new Error('Tweet processing failed:', error);
     }
   }
 
   // 推文图片处理
-  private async imageProcess(
-    imageData: MultiplierEarning | UsdEarning | EventEarning,
-  ) {
+  private async imageProcess(tweetType: string, imageData: Earning) {
     // 基础属性
     const watermarks: any[] = [
       {
@@ -171,7 +167,7 @@ export class AgentTwitterService implements OnModuleInit {
       },
     ];
 
-    if ('multiplier' in imageData) {
+    if (tweetType === 'MultiplierEarning') {
       watermarks.push(
         {
           id: '1742979409723',
@@ -192,7 +188,7 @@ export class AgentTwitterService implements OnModuleInit {
           position: { x: 170, y: 1027 },
         },
       );
-    } else if ('rank' in imageData) {
+    } else if (tweetType === 'EventEarning') {
       watermarks.push(
         {
           id: '1742979401834',

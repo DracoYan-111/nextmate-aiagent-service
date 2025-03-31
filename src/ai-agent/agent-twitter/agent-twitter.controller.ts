@@ -8,10 +8,8 @@ import {
 } from '@nestjs/common';
 import { AgentTwitterService } from './agent-twitter.service';
 import {
-  EventEarning,
-  MultiplierEarning,
+  Earning,
   SendATweetDto,
-  UsdEarning,
 } from './dto/agent-twitter.dto';
 import { SendATwitterAuthGuard } from '../../auth/auth.guard';
 
@@ -22,13 +20,11 @@ export class AgentTwitterController {
   @Post('send-tweet')
   @UseGuards(SendATwitterAuthGuard)
   @HttpCode(200)
-  async sendATweet(
-    @Body() body: SendATweetDto<MultiplierEarning | UsdEarning | EventEarning>,
-  ) {
+  async sendATweet(@Body() body: SendATweetDto<Earning>) {
     if (
-      body.tweetType === 'MultiplierEarning' ||
+      (body.tweetType === 'MultiplierEarning' && body.data.multiplier > 0) ||
       body.tweetType === 'UsdEarning' ||
-      body.tweetType === 'EventEarning'
+      (body.tweetType === 'EventEarning' && body.data.rank > 0)
     ) {
       const result = await this.agentTwitterService.sendATweet(body);
 

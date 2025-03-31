@@ -12,33 +12,11 @@ export class SendATweetDto<T> {
   data: T;
 }
 
-export class MultiplierEarning {
+export class Earning {
   @IsString()
   userName: string; // 用户名
   @IsNumber()
   multiplier: number; // 倍数
-  @IsNumber()
-  tokenAmount: number; // 代币数量
-  @IsString()
-  tokenSymbol: string; // 代币名称
-  @IsNumber()
-  usdAmount: number; // 美元数量
-}
-
-export class UsdEarning {
-  @IsString()
-  userName: string; // 用户名
-  @IsNumber()
-  tokenAmount: number; // 代币数量
-  @IsString()
-  tokenSymbol: string; // 代币名称
-  @IsNumber()
-  usdAmount: number; // 美元数量
-}
-
-export class EventEarning {
-  @IsString()
-  userName: string; // 用户名
   @IsNumber()
   rank: number; // 排名
   @IsNumber()
