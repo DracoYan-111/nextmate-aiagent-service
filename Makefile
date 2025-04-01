@@ -1,5 +1,5 @@
 REGISTRY := swr.la-north-2.myhuaweicloud.com/nextmate
-TARGET := aiagent-backend
+TARGET := aiagent-service
 ENV := dev
 VERSION ?= $(shell git rev-parse --short HEAD)
 
