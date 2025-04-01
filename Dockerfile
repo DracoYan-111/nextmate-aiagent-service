@@ -54,6 +54,15 @@ RUN npm install -g pnpm@9.15.4 && \
 
 WORKDIR /app
 
+# 写入 .env 文件
+RUN echo "PORT=3003" >> .env && \
+    echo "TWITTER_USERNAME=@dorismao85" >> .env && \
+    echo "TWITTER_PASSWORD=Dorismao85_stellac" >> .env && \
+    echo "AI_API_KEY=sk-a218c7498cb747a9bf734505dba75ceb" >> .env && \
+    echo "AI_MODEL=deepseek-reasoner" >> .env && \
+    echo "AI_BASE_URL=api.deepseek.com" >> .env
+
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
