@@ -1,12 +1,11 @@
-FROM node:latest AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-COPY package*.json ./
+RUN apk add --no-cache libc6-compat
 
 RUN npm install -g pnpm@latest
 
-COPY . .
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
@@ -14,9 +13,11 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+COPY . .
+
 RUN pnpm run build
 
-FROM node:latest
+FROM node:20-alpine
 
 WORKDIR /app
 
