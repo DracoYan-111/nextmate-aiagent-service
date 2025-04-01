@@ -50,7 +50,5 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/canvas/build ./node_modules/canvas/build
 
 # Copy .env file
-COPY .env .env
-
 EXPOSE 3003
 CMD ["pnpm", "run", "start:prod"]
