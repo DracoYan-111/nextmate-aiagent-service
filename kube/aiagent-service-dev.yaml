@@ -1,20 +1,3 @@
----
-# ConfigMap 定义
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: aiagent-service-config
-  namespace: dev
-data:
-  .env: |-
-    PORT=3003            
-    TWITTER_USERNAME=    
-    TWITTER_PASSWORD=    
-    TWITTER_EMAIL=       
-    PROXY_URL=           
-
----
-# Deployment 定义
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,28 +16,27 @@ spec:
         app: aiagent-service
     spec:
       containers:
-      - name: aiagent-service
-        image: my-nestjs-app:latest
-        ports:
-        - containerPort: 3003
-        env:                     # 优化：添加环境变量以增强灵活性
-        - name: NODE_ENV
-          value: "production"
-        volumeMounts:
-        - name: config-volume    # 修复：与 volumes 中的 name 保持一致
-          mountPath: /app/.env   # 优化：明确挂载为文件
-          subPath: .env
-        resources:              # 优化：添加资源限制
-          limits:
-            cpu: "0.5"          # 示例：限制 CPU 为 0.5 核
-            memory: "512Mi"     # 示例：限制内存为 512Mi
-          requests:
-            cpu: "0.2"          # 示例：请求 CPU 为 0.2 核
-            memory: "256Mi"     # 示例：请求内存为 256Mi
+        - name: aiagent-service
+          image: swr.la-north-2.myhuaweicloud.com/nextmate/aiagent-service:dev-${IMAGE_TAG}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3003
+          resources:
+            limits:
+              cpu: '200m'
+              memory: '512Mi'
+            requests:
+              cpu: '200m'
+              memory: '256Mi'
       volumes:
-      - name: config-volume      # 修复：与 volumeMounts 中的 name 匹配
-        configMap:
-          name: aiagent-service-config  # 优化：引用更具描述性的 ConfigMap 名称
-          items:
-          - key: .env
-            path: .env
+        - name: aiagent-service-volume
+          configMap:
+            name: aiagent-service
+      imagePullSecrets:
+        - name: default-secret
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aiagent-service
+  namespace: dev
