@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:latest AS builder
 
 RUN apk add --no-cache libc6-compat
 
@@ -18,7 +18,7 @@ RUN \
 
 RUN pnpm run build
 
-FROM node:20-alpine
+FROM node:latest
 
 WORKDIR /app
 
