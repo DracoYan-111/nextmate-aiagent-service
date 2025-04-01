@@ -1,12 +1,15 @@
-name: aiagent-backend-hwc-dev
+name: aiagent-service-dev
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - dev
 
 env:
   REGION_ID: 'la-north-2'
   SWR_ORGANIZATION: 'nextmate'
-  IMAGE_NAME: 'aiagent-backend'
+  IMAGE_NAME: 'aiagent-service'
 
 jobs:
   build:
@@ -20,11 +23,8 @@ jobs:
         id: set_build_args
         run: |
           VERSION=$(git rev-parse --short HEAD)
-          BUILD=$(date +%Y%m%d%H%M%S)
-          RUNNER=gcr.io/distroless/base-debian12:nonroot
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "BUILD=$BUILD" >> $GITHUB_ENV
-          echo "RUNNER=$RUNNER" >> $GITHUB_ENV
+          echo "::set-output name=version::$VERSION"
       - name: Login to Huawei Cloud SWR
         uses: huaweicloud/swr-login@v2.1.0
         with:
@@ -37,11 +37,10 @@ jobs:
           SWR_REGISTRY: swr.${{ env.REGION_ID }}.myhuaweicloud.com/${{ env.SWR_ORGANIZATION }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           VERSION: ${{ env.VERSION }}
-          BUILD: ${{ env.BUILD }}
-          RUNNER: ${{ env.RUNNER }}
         run: |
           make docker-build-dev REGISTRY=${{ env.SWR_REGISTRY }}
           make docker-push-dev REGISTRY=${{ env.SWR_REGISTRY }}
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -52,6 +51,7 @@ jobs:
         run: |
           sed -i 's|${IMAGE_TAG}|${{ needs.build.outputs.version }}|' kube/aiagent-service-dev.yaml
           cat kube/aiagent-service-dev.yaml
+          echo "${IMAGE_TAG}"
       - name: Deploy to K8S
         uses: actions-hub/kubectl@master
         env:
