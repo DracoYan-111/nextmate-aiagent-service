@@ -1,25 +1,56 @@
-FROM node:20-alpine AS builder
+FROM node:23.3.0-slim  AS builder
+
+# Install pnpm globally and necessary build tools
+RUN npm install -g pnpm@9.15.4 && \
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    git \
+    python3 \
+    python3-pip \
+    curl \
+    node-gyp \
+    ffmpeg \
+    libtool-bin \
+    autoconf \
+    automake \
+    libopus-dev \
+    make \
+    g++ \
+    build-essential \
+    libcairo2-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
+    libgif-dev \
+    openssl \
+    libssl-dev libsecret-1-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set Python 3 as the default python
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 WORKDIR /app
-RUN apk add --no-cache \
-    build-base \
-    cairo-dev \
-    pango-dev \
-    jpeg-dev \
-    giflib-dev \
-    librsvg-dev
-
-
-
-COPY package*.json ./
-
-RUN npm install
 
 COPY . .
+# Install dependencies
 
-RUN npm run build
+RUN pnpm install
 
-FROM node:20-alpine
+# Build the project
+RUN pnpm run build && pnpm prune --prod
+
+FROM node:23.3.0-slim
+# Install runtime dependencies
+RUN npm install -g pnpm@9.15.4 && \
+    apt-get update && \
+    apt-get install -y \
+    git \
+    python3 \
+    ffmpeg \
+    libgif7 \ 
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -28,4 +59,4 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3003
-CMD [ "npm", "run", "start:prod" ]
+CMD [ "pnpm", "run", "start:prod" ]
