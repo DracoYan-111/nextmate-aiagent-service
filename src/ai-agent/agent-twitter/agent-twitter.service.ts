@@ -21,6 +21,7 @@ export class AgentTwitterService implements OnModuleInit {
   private scraper: Scraper;
   private twitterUsername: string;
   private twitterPassword: string;
+  private twitterEmail: string;
   private aiApiKey: string;
   private aiModel: string;
   private aiBaseUrl: string;
@@ -30,6 +31,7 @@ export class AgentTwitterService implements OnModuleInit {
     this.scraper = new Scraper();
     this.twitterUsername = this.configService.get<string>('TWITTER_USERNAME')!;
     this.twitterPassword = this.configService.get<string>('TWITTER_PASSWORD')!;
+    this.twitterEmail = this.configService.get<string>('TWITTER_EMAIL')!;
     this.aiApiKey = this.configService.get<string>('AI_API_KEY')!;
     this.aiModel = this.configService.get<string>('AI_MODEL')!;
     this.aiBaseUrl = this.configService.get<string>('AI_BASE_URL')!;
@@ -75,7 +77,7 @@ export class AgentTwitterService implements OnModuleInit {
   async login() {
     try {
       // Log in
-      await this.scraper.login(this.twitterUsername, this.twitterPassword);
+      await this.scraper.login(this.twitterUsername, this.twitterPassword, this.twitterEmail);
 
       // 登录成功后保存 cookies
       await this.saveCookies();

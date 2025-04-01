@@ -58,6 +58,7 @@ WORKDIR /app
 RUN echo "PORT=3003" >> .env && \
     echo "TWITTER_USERNAME=@dorismao85" >> .env && \
     echo "TWITTER_PASSWORD=Dorismao85_stellac" >> .env && \
+    echo "TWITTER_EMAIL=dorismao85@gmail.com" >> .env && \
     echo "AI_API_KEY=sk-a218c7498cb747a9bf734505dba75ceb" >> .env && \
     echo "AI_MODEL=deepseek-reasoner" >> .env && \
     echo "AI_BASE_URL=api.deepseek.com" >> .env
