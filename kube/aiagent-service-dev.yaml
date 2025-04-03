@@ -20,7 +20,7 @@ spec:
       containers:
         - name: aiagent-service
           image: swr.la-north-2.myhuaweicloud.com/nextmate/aiagent-service:dev-${IMAGE_TAG}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
           resources:

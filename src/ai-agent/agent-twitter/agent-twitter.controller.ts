@@ -13,7 +13,7 @@ import {
 } from './dto/agent-twitter.dto';
 import { SendATwitterAuthGuard } from '../../auth/auth.guard';
 
-@Controller('agent-twitter')
+@Controller('/ai-agent/agent-twitter')
 export class AgentTwitterController {
   constructor(private readonly agentTwitterService: AgentTwitterService) {}
 
