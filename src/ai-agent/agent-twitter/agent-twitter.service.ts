@@ -242,12 +242,13 @@ export class AgentTwitterService implements OnModuleInit {
       watermarks.push(
         {
           id: '174297944',
-          text: `win`,
+          // 动态计算"win"的长度,确保不会重叠
+          text: `${'  '.repeat(imageData.userName.length+10)} win`,
           color: '#ffffff',
           gradientColor: '#0000FF',
           useGradient: false,
           fontSize: 75,
-          position: { x: 670, y: 439 },
+          position: { x: 170, y: 439 },
         },
         {
           id: '1742979409723',

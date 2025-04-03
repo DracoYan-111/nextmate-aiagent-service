@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from 'canvas';
+import { createCanvas, loadImage, registerFont } from 'canvas';
 import { Injectable, Logger } from '@nestjs/common';
 import fetch from 'node-fetch';
 import * as fs from 'fs';
@@ -17,6 +17,8 @@ export class ImageGenerationGuard {
 
       // 加载图片
       const image = await loadImage(imageBuffer);
+      // 注册字体
+      registerFont('fonts/InterVariable.ttf', { family: 'InterVariable' });
 
       // 创建画布
       const canvas = createCanvas(image.width, image.height);
@@ -28,7 +30,7 @@ export class ImageGenerationGuard {
       // 绘制水印
       watermarks.forEach((watermark) => {
         // 设置字体
-        ctx.font = `bold ${watermark.fontSize}px Inter`;
+        ctx.font = `${watermark.fontSize}px InterVariable`;
 
         const { x, y } = watermark.position;
         const textWidth = ctx.measureText(watermark.text).width;
