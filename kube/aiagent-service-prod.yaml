@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aiagent-service
+  namespace: prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiagent-service
+  namespace: prod
+  labels:
+    app: aiagent-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiagent-service
+  template:
+    metadata:
+      labels:
+        app: aiagent-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      imagePullSecrets:
+        - name: default-secret
+      serviceAccountName: aiagent-spc-sa
+      containers:
+        - name: aiagent-service
+          image: swr.la-north-2.myhuaweicloud.com/nextmate/aiagent-service:prod-${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003
+          resources:
+            limits:
+              cpu: '200m'
+              memory: '512Mi'
+            requests:
+              cpu: '200m'
+              memory: '256Mi'
+          env:
+            - name: CONFIG_FILES
+              value: "./confidential.json"
+          volumeMounts:
+            - name: confidentials-store
+              mountPath: /app/confidential.json
+              subPath: confidential.json
+              readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: confidentials-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "aiagent-spc"

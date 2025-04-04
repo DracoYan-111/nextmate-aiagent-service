@@ -1,0 +1,65 @@
+name: aiagent-service-prod
+
+on:
+  push:
+    tags:
+      - 'release/v*'
+
+env:
+  REGION_ID: 'la-north-2'
+  SWR_ORGANIZATION: 'nextmate'
+  IMAGE_NAME: 'aiagent-service'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_build_args.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set Build Args
+        id: set_build_args
+        run: |
+          VERSION=v${GITHUB_REF#refs/tags/release/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=version::$VERSION"
+      - name: Login to Huawei Cloud SWR
+        uses: huaweicloud/swr-login@v2.1.0
+        with:
+          access-key-id: ${{ secrets.SWR_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.SWR_ACCESS_KEY_SECRET }}
+          region: ${{ env.REGION_ID }}
+      - name: Build and Push Docker Image To Huaweicloud SWR
+        id: push-image
+        env:
+          SWR_REGISTRY: swr.${{ env.REGION_ID }}.myhuaweicloud.com/${{ env.SWR_ORGANIZATION }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          VERSION: ${{ env.VERSION }}
+        run: |
+          make docker-build-prod REGISTRY=${{ env.SWR_REGISTRY }}
+          make docker-push-prod REGISTRY=${{ env.SWR_REGISTRY }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Apply ServiceAccount and SPC
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: apply -f kube/aiagent-spc-prod.yaml
+      - name: Update K8S YAML
+        run: |
+          sed -i 's|${IMAGE_TAG}|${{ needs.build.outputs.version }}|' kube/aiagent-service-prod.yaml
+          cat kube/aiagent-service-prod.yaml
+          echo "${IMAGE_TAG}"
+      - name: Deploy to K8S
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: apply -f kube/aiagent-service-prod.yaml
