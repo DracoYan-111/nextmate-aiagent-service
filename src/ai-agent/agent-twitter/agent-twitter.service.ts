@@ -178,7 +178,7 @@ export class AgentTwitterService implements OnModuleInit {
           color: '#ffffff',
           gradientColor: '#0000FF',
           useGradient: false,
-          fontSize: 50,
+          fontSize: 70,
           position: { x: 170, y: 439 },
         },
         {
@@ -257,7 +257,7 @@ export class AgentTwitterService implements OnModuleInit {
           color: '#ffffff',
           gradientColor: '#0000FF',
           useGradient: false,
-          fontSize: 50,
+          fontSize: 70,
           position: { x: 170, y: 439 },
         },
         {
