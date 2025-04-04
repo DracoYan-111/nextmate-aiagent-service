@@ -38,7 +38,11 @@ export class AgentTwitterService implements OnModuleInit {
   async onModuleInit() {
     const configPath =
       process.env.CONFIG_FILES || './config.json,./confidential.json';
-    console.log(configPath,"--------==========---------");
+    console.log(
+      configPath,
+      this.twitterUsername,
+      '--------==========---------',
+    );
     const cookiesLoaded = await this.loadCookies();
     if (!cookiesLoaded) {
       await this.login(); // 如果加载失败，则执行登录

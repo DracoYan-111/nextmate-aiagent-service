@@ -1,7 +1,6 @@
 import { createCanvas, loadImage, registerFont } from 'canvas';
 import { Injectable, Logger } from '@nestjs/common';
 import fetch from 'node-fetch';
-import * as fs from 'fs';
 
 @Injectable()
 export class ImageGenerationGuard {
