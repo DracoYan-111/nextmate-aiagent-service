@@ -1,7 +1,4 @@
-import {
-  Earning,
-  SendATweetDto,
-} from './dto/agent-twitter.dto';
+import { Earning, SendATweetDto } from './dto/agent-twitter.dto';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
 import { ConfigService } from '@nestjs/config';
@@ -50,34 +47,38 @@ export class AgentTwitterService implements OnModuleInit {
     // 处理图片
     const mediaData = await this.imageProcess(body.tweetType, body.data);
 
-    // 处理文案
-    const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
+    // // 处理文案
+    // const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
 
-    // 发送前确定登录状态
-    const isloggedIn = await this.scraper.isLoggedIn();
-    if (!isloggedIn) {
-      await this.login();
-    }
-    // 发送推文
-    const sendTweetResults = await this.scraper.sendTweet(
-      tweet,
-      undefined, // 回复的推文 ID
-      mediaData,
-    );
+    // // 发送前确定登录状态
+    // const isloggedIn = await this.scraper.isLoggedIn();
+    // if (!isloggedIn) {
+    //   await this.login();
+    // }
+    // // 发送推文
+    // const sendTweetResults = await this.scraper.sendTweet(
+    //   tweet,
+    //   undefined, // 回复的推文 ID
+    //   mediaData,
+    // );
 
-    if (sendTweetResults.status === 200) {
-      this.logger.log(`Tweet sent successfully`);
-      return true;
-    }else{
-      throw new Error(`Tweet processing failed:${sendTweetResults}`);
-    }
+    // if (sendTweetResults.status === 200) {
+    //   this.logger.log(`Tweet sent successfully`);
+    //   return true;
+    // } else {
+    //   throw new Error(`Tweet processing failed:${sendTweetResults}`);
+    // }
   }
 
   // 登录方法
   async login() {
     try {
       // Log in
-      await this.scraper.login(this.twitterUsername, this.twitterPassword, this.twitterEmail);
+      await this.scraper.login(
+        this.twitterUsername,
+        this.twitterPassword,
+        this.twitterEmail,
+      );
 
       // 登录成功后保存 cookies
       await this.saveCookies();
@@ -100,7 +101,6 @@ export class AgentTwitterService implements OnModuleInit {
       );
       this.logger.log(`Cookies saved successfully`);
     } catch (error) {
-
       this.logger.error(`Cookies save failed:${error}`);
     }
   }
@@ -172,8 +172,18 @@ export class AgentTwitterService implements OnModuleInit {
     if (tweetType === 'MultiplierEarning') {
       watermarks.push(
         {
+          id: '174297944',
+          // 动态计算"win"的长度,确保不会重叠
+          text: `hit`,
+          color: '#ffffff',
+          gradientColor: '#0000FF',
+          useGradient: false,
+          fontSize: 50,
+          position: { x: 170, y: 439 },
+        },
+        {
           id: '1742979409723',
-          text: `+${imageData.multiplier.toString()}%`,
+          text: `${this.formatWithUnitFromPercent((imageData.multiplier / 100).toString())} X`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -181,13 +191,13 @@ export class AgentTwitterService implements OnModuleInit {
           position: { x: 170, y: 830 },
         },
         {
-          id: '1742979448517',
-          text: `${imageData.tokenAmount.toString()} ${imageData.tokenSymbol} ($${imageData.usdAmount.toString()})`,
+          id: '1742979409723',
+          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`, //($${this.formatWithUnitFromPercent(imageData.usdAmount.toString())})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
           fontSize: 112,
-          position: { x: 170, y: 1027 },
+          position: { x: 170, y: 1013 },
         },
       );
     } else if (tweetType === 'EventEarning') {
@@ -204,9 +214,9 @@ export class AgentTwitterService implements OnModuleInit {
         {
           id: '1742979409723',
           text: `#${imageData.rank.toString()}`,
-          color: '#EBD7FF',
-          gradientColor: '#0000FF',
-          useGradient: false,
+          color: '#A49FFF',
+          gradientColor: '#A49FFF',
+          useGradient: true,
           fontSize: 100,
           position: { x: 407, y: 610 },
         },
@@ -220,8 +230,8 @@ export class AgentTwitterService implements OnModuleInit {
           position: { x: 541, y: 604 },
         },
         {
-          id: '1742979448517',
-          text: `$${imageData.usdAmount.toString()}`,
+          id: '1742979409723',
+          text: `$${this.formatWithUnitFromPercent(imageData.usdAmount.toString())}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -229,8 +239,8 @@ export class AgentTwitterService implements OnModuleInit {
           position: { x: 170, y: 975 },
         },
         {
-          id: '1742979447462',
-          text: `(${imageData.tokenAmount.toString()} ${imageData.tokenSymbol})`,
+          id: '1742979409723',
+          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -243,16 +253,16 @@ export class AgentTwitterService implements OnModuleInit {
         {
           id: '174297944',
           // 动态计算"win"的长度,确保不会重叠
-          text: `${'  '.repeat(imageData.userName.length+10)} win`,
+          text: `win`,
           color: '#ffffff',
           gradientColor: '#0000FF',
           useGradient: false,
-          fontSize: 75,
+          fontSize: 50,
           position: { x: 170, y: 439 },
         },
         {
           id: '1742979409723',
-          text: `$${imageData.usdAmount.toString()}`,
+          text: `$${this.formatWithUnitFromPercent(imageData.usdAmount.toString())}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -261,7 +271,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979448517',
-          text: `(${imageData.tokenAmount.toString()} ${imageData.tokenSymbol})`,
+          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -274,5 +284,31 @@ export class AgentTwitterService implements OnModuleInit {
     const imageFileSync = await ImageGenerationGuard.downloadImage(watermarks);
 
     return [{ data: imageFileSync, mediaType: 'image/png' }];
+  }
+
+  private formatWithUnitFromPercent(percentStr: string): string {
+    const percentage = parseFloat(percentStr);
+    const absValue = Math.abs(percentage);
+
+    let value: number;
+    let unit = '';
+
+    if (absValue >= 1e9) {
+      value = percentage / 1e9;
+      unit = 'B';
+    } else if (absValue >= 1e6) {
+      value = percentage / 1e6;
+      unit = 'M';
+    } else if (absValue >= 1e3) {
+      value = percentage / 1e3;
+      unit = 'K';
+    } else {
+      value = percentage;
+    }
+
+    // 保留最多两位小数，去掉多余 0
+    const formatted = parseFloat(value.toFixed(2)).toString();
+
+    return `${formatted}${unit}`;
   }
 }
