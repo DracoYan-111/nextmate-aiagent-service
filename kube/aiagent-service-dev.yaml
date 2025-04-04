@@ -1,3 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aiagent-service
+  namespace: dev
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,8 +21,11 @@ spec:
       labels:
         app: aiagent-service
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: 192.168.0.251 # 绑定到这个节点，因为需要弹性公网ip
+      securityContext:
+        runAsNonRoot: true
+      imagePullSecrets:
+        - name: default-secret
+      serviceAccountName: aiagent-spc-sa
       containers:
         - name: aiagent-service
           image: swr.la-north-2.myhuaweicloud.com/nextmate/aiagent-service:dev-${IMAGE_TAG}
@@ -30,15 +39,24 @@ spec:
             requests:
               cpu: '200m'
               memory: '256Mi'
+          env:
+            - name: CONFIG_FILES
+              value: "./confidential.json"
+          volumeMounts:
+            - name: confidentials-store
+              mountPath: /app/confidential.json
+              subPath: confidential.json
+              readOnly: true
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       volumes:
-        - name: aiagent-service-volume
-          configMap:
-            name: aiagent-service
-      imagePullSecrets:
-        - name: default-secret
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: aiagent-service
-  namespace: dev
+        - name: confidentials-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "webapp-spc"
