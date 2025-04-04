@@ -69,5 +69,11 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/fonts ./fonts
 COPY --from=builder /app/dist ./dist
 
+# 添加一个非 root 用户
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+# 使用非 root 用户运行应用
+USER appuser
+
 EXPOSE 3003
 CMD [ "pnpm", "run", "start:prod" ]
