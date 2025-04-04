@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { AgentTwitterModule } from './ai-agent/agent-twitter/agent-twitter.module';
 import { ConfigModule } from '@nestjs/config';
 import * as fs from 'fs';
-import path from 'path';
+import * as path from 'path';
 
 function loadJsonFiles() {
   const configPath = process.env.CONFIG_FILES || './config.json,./confidential.json';
