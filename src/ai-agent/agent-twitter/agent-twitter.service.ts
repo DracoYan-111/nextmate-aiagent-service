@@ -309,6 +309,9 @@ export class AgentTwitterService implements OnModuleInit {
     // 保留最多两位小数，去掉多余 0
     const formatted = parseFloat(value.toFixed(2)).toString();
 
+    if (formatted === '0') {
+      return percentage.toFixed(8).toString();
+    }
     return `${formatted}${unit}`;
   }
 }
