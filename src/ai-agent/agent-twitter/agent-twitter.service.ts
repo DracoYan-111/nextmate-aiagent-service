@@ -49,27 +49,27 @@ export class AgentTwitterService implements OnModuleInit {
     // 处理图片
     const mediaData = await this.imageProcess(body.tweetType, body.data);
 
-    // // 处理文案
-    // const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
+    // 处理文案
+    const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
 
-    // // 发送前确定登录状态
-    // const isloggedIn = await this.scraper.isLoggedIn();
-    // if (!isloggedIn) {
-    //   await this.login();
-    // }
-    // // 发送推文
-    // const sendTweetResults = await this.scraper.sendTweet(
-    //   tweet,
-    //   undefined, // 回复的推文 ID
-    //   mediaData,
-    // );
+    // 发送前确定登录状态
+    const isloggedIn = await this.scraper.isLoggedIn();
+    if (!isloggedIn) {
+      await this.login();
+    }
+    // 发送推文
+    const sendTweetResults = await this.scraper.sendTweet(
+      tweet,
+      undefined, // 回复的推文 ID
+      mediaData,
+    );
 
-    // if (sendTweetResults.status === 200) {
-    //   this.logger.log(`Tweet sent successfully`);
-    //   return true;
-    // } else {
-    //   throw new Error(`Tweet processing failed:${sendTweetResults}`);
-    // }
+    if (sendTweetResults.status === 200) {
+      this.logger.log(`Tweet sent successfully`);
+      return true;
+    } else {
+      throw new Error(`Tweet processing failed:${sendTweetResults}`);
+    }
   }
 
   // 登录方法

@@ -7,10 +7,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { AgentTwitterService } from './agent-twitter.service';
-import {
-  Earning,
-  SendATweetDto,
-} from './dto/agent-twitter.dto';
+import { Earning, SendATweetDto } from './dto/agent-twitter.dto';
 import { SendATwitterAuthGuard } from '../../auth/auth.guard';
 
 @Controller('/ai-agent/agent-twitter')
