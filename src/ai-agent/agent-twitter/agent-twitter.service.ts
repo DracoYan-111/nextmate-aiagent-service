@@ -4,14 +4,16 @@ import { Scraper } from 'agent-twitter-client';
 import { ConfigService } from '@nestjs/config';
 import { Cookie } from 'tough-cookie';
 import { ImageGenerationGuard } from 'src/util/image-generation';
+import { UnitConversion } from 'src/util/unit-conversion';
 import { Agent } from 'alith';
 import * as path from 'path';
 import * as fs from 'fs';
 
 @Injectable()
 export class AgentTwitterService implements OnModuleInit {
+  tmpDir = process.env.TMP_DIR ?? __dirname;
   private readonly cookiesFilePath = path.join(
-    __dirname,
+    this.tmpDir,
     'twitter-cookies.json',
   );
   private readonly logger = new Logger(AgentTwitterService.name);
@@ -47,27 +49,27 @@ export class AgentTwitterService implements OnModuleInit {
     // 处理图片
     const mediaData = await this.imageProcess(body.tweetType, body.data);
 
-    // 处理文案
-    const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
+    // // 处理文案
+    // const tweet = this.tweetProcess(body.tweetData, body.tweetUrl);
 
-    // 发送前确定登录状态
-    const isloggedIn = await this.scraper.isLoggedIn();
-    if (!isloggedIn) {
-      await this.login();
-    }
-    // 发送推文
-    const sendTweetResults = await this.scraper.sendTweet(
-      tweet,
-      undefined, // 回复的推文 ID
-      mediaData,
-    );
+    // // 发送前确定登录状态
+    // const isloggedIn = await this.scraper.isLoggedIn();
+    // if (!isloggedIn) {
+    //   await this.login();
+    // }
+    // // 发送推文
+    // const sendTweetResults = await this.scraper.sendTweet(
+    //   tweet,
+    //   undefined, // 回复的推文 ID
+    //   mediaData,
+    // );
 
-    if (sendTweetResults.status === 200) {
-      this.logger.log(`Tweet sent successfully`);
-      return true;
-    } else {
-      throw new Error(`Tweet processing failed:${sendTweetResults}`);
-    }
+    // if (sendTweetResults.status === 200) {
+    //   this.logger.log(`Tweet sent successfully`);
+    //   return true;
+    // } else {
+    //   throw new Error(`Tweet processing failed:${sendTweetResults}`);
+    // }
   }
 
   // 登录方法
@@ -183,7 +185,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `${this.formatWithUnitFromPercent((imageData.multiplier / 100).toString())} X`,
+          text: `${UnitConversion.unitCalculation((imageData.multiplier / 100).toString())} X`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -192,7 +194,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`, //($${this.formatWithUnitFromPercent(imageData.usdAmount.toString())})`,
+          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`, //($${UnitConversion.unitCalculation(imageData.usdAmount.toString())})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -231,7 +233,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `$${this.formatWithUnitFromPercent(imageData.usdAmount.toString())}`,
+          text: `$${UnitConversion.unitCalculation(imageData.usdAmount.toString())}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -240,7 +242,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
+          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -262,7 +264,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `$${this.formatWithUnitFromPercent(imageData.usdAmount.toString())}`,
+          text: `$${UnitConversion.unitCalculation(imageData.usdAmount.toString())}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -271,7 +273,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979448517',
-          text: `(${this.formatWithUnitFromPercent(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
+          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -284,34 +286,5 @@ export class AgentTwitterService implements OnModuleInit {
     const imageFileSync = await ImageGenerationGuard.downloadImage(watermarks);
 
     return [{ data: imageFileSync, mediaType: 'image/png' }];
-  }
-
-  private formatWithUnitFromPercent(percentStr: string): string {
-    const percentage = parseFloat(percentStr);
-    const absValue = Math.abs(percentage);
-
-    let value: number;
-    let unit = '';
-
-    if (absValue >= 1e9) {
-      value = percentage / 1e9;
-      unit = 'B';
-    } else if (absValue >= 1e6) {
-      value = percentage / 1e6;
-      unit = 'M';
-    } else if (absValue >= 1e3) {
-      value = percentage / 1e3;
-      unit = 'K';
-    } else {
-      value = percentage;
-    }
-
-    // 保留最多两位小数，去掉多余 0
-    const formatted = parseFloat(value.toFixed(2)).toString();
-
-    if (formatted === '0') {
-      return percentage.toFixed(8).toString();
-    }
-    return `${formatted}${unit}`;
   }
 }

@@ -1,7 +1,7 @@
 import { createCanvas, loadImage, registerFont } from 'canvas';
 import { Injectable, Logger } from '@nestjs/common';
 import fetch from 'node-fetch';
-
+import * as fs from 'fs';
 @Injectable()
 export class ImageGenerationGuard {
   static async downloadImage(watermarks: any[]) {
@@ -95,9 +95,9 @@ export class ImageGenerationGuard {
       logger.log('Image processing completed');
       // 将画布转换为buffer
       const buffer = canvas.toBuffer('image/png');
-      // // 保存文件
-      // const fileName = 'watermarked-image.jpeg';
-      // fs.writeFileSync(fileName, buffer);
+      // 保存文件
+      const fileName = 'watermarked-image.jpeg';
+      fs.writeFileSync(fileName, buffer);
       return buffer;
     } catch (error) {
       throw new Error(`Image processing failed:${error}`);

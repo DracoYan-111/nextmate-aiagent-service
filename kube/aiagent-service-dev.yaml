@@ -47,6 +47,8 @@ spec:
               mountPath: /app/confidential.json
               subPath: confidential.json
               readOnly: true
+            - name: writable-tmp
+              mountPath: /app/tmp  # 挂载点是 /app/tmp
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
@@ -60,3 +62,5 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: "aiagent-spc"
+        - name: writable-tmp
+          emptyDir: {}  # K8s 自动创建一个内存临时目录

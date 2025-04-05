@@ -7,7 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 function loadJsonFiles() {
-  const configPath = process.env.CONFIG_FILES || './config.json,./confidential.json';
+  const configPath = process.env.CONFIG_FILES || './confidential.json';
   const files = configPath.split(',').map(f => f.trim());
   const config = {};
 

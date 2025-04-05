@@ -56,6 +56,7 @@ WORKDIR /app
 
 # 写入 .env 文件
 RUN echo "PORT=3003" >> .env && \
+    echo "TMP_DIR=/app/tmp" >> .env && \
     echo "AI_API_KEY=sk-a218c7498cb747a9bf734505dba75ceb" >> .env && \
     echo "AI_MODEL=deepseek-reasoner" >> .env && \
     echo "AI_BASE_URL=api.deepseek.com" >> .env
