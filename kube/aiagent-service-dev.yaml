@@ -50,7 +50,7 @@ spec:
             - name: writable-tmp
               mountPath: /app/tmp  # 挂载点是 /app/tmp
           securityContext:
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             allowPrivilegeEscalation: false
             capabilities:
               drop:
