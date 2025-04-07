@@ -95,9 +95,9 @@ export class ImageGenerationGuard {
       logger.log('Image processing completed');
       // 将画布转换为buffer
       const buffer = canvas.toBuffer('image/png');
-      // 保存文件
-      const fileName = 'watermarked-image.jpeg';
-      fs.writeFileSync(fileName, buffer);
+      // // 保存文件
+      // const fileName = 'watermarked-image.jpeg';
+      // fs.writeFileSync(fileName, buffer);
       return buffer;
     } catch (error) {
       throw new Error(`Image processing failed:${error}`);
