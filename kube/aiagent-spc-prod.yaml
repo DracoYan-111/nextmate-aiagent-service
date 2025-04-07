@@ -15,7 +15,7 @@ spec:
   provider: cce     # 固定为cce
   parameters:
     objects: |
-          - objectName: "aiagent-prod"
+          - objectName: "aiagent-dev"
             objectAlias: "confidential.json"
             objectVersion: "latest"
             objectType: "csms"
