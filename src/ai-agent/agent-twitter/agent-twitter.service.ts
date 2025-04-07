@@ -172,6 +172,16 @@ export class AgentTwitterService implements OnModuleInit {
     ];
 
     if (tweetType === 'MultiplierEarning') {
+      const multiplier = (imageData.multiplier / 100).toString().split(".")[0]
+      // UnitConversion.unitCalculation((imageData.multiplier / 100).toString())
+      // 提取整数部分和单位
+      // const match = multiplier.match(/^(\d+)(?:\.\d+)?(\D*)$/);
+      // const result = match ? `${match[1]}${match[2]}` : multiplier;
+
+      const tokenAmount = UnitConversion.unitCalculation(
+        imageData.tokenAmount.toString(),
+      );
+      const tokenSymbol = imageData.tokenSymbol;
       watermarks.push(
         {
           id: '174297944',
@@ -185,7 +195,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `${UnitConversion.unitCalculation((imageData.multiplier / 100).toString())} X`,
+          text: `${multiplier}x`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -194,7 +204,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`, //($${UnitConversion.unitCalculation(imageData.usdAmount.toString())})`,
+          text: `(${tokenAmount} ${tokenSymbol})`, //($${UnitConversion.unitCalculation(imageData.usdAmount.toString())})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -203,6 +213,14 @@ export class AgentTwitterService implements OnModuleInit {
         },
       );
     } else if (tweetType === 'EventEarning') {
+      const rank = imageData.rank.toString();
+      const usdAmount = UnitConversion.unitCalculation(
+        imageData.usdAmount.toString(),
+      );
+      const tokenAmount = UnitConversion.unitCalculation(
+        imageData.tokenAmount.toString(),
+      );
+      const tokenSymbol = imageData.tokenSymbol;
       watermarks.push(
         {
           id: '1742979401834',
@@ -215,7 +233,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `#${imageData.rank.toString()}`,
+          text: `#${rank}`,
           color: '#A49FFF',
           gradientColor: '#A49FFF',
           useGradient: true,
@@ -233,7 +251,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `$${UnitConversion.unitCalculation(imageData.usdAmount.toString())}`,
+          text: `$${usdAmount}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -242,7 +260,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
+          text: `(${tokenAmount} ${tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -251,6 +269,11 @@ export class AgentTwitterService implements OnModuleInit {
         },
       );
     } else {
+      const usdAmount = UnitConversion.unitCalculation(imageData.usdAmount.toString())
+      const tokenAmount = UnitConversion.unitCalculation(
+        imageData.tokenAmount.toString(),
+      );
+      const tokenSymbol = imageData.tokenSymbol;
       watermarks.push(
         {
           id: '174297944',
@@ -264,7 +287,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979409723',
-          text: `$${UnitConversion.unitCalculation(imageData.usdAmount.toString())}`,
+          text: `$${usdAmount}`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,
@@ -273,7 +296,7 @@ export class AgentTwitterService implements OnModuleInit {
         },
         {
           id: '1742979448517',
-          text: `(${UnitConversion.unitCalculation(imageData.tokenAmount.toString())} ${imageData.tokenSymbol})`,
+          text: `(${tokenAmount} ${tokenSymbol})`,
           color: '#EBD7FF',
           gradientColor: '#0000FF',
           useGradient: false,

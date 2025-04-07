@@ -1,6 +1,4 @@
-import { createCanvas, loadImage, registerFont } from 'canvas';
 import { Injectable, Logger } from '@nestjs/common';
-import fetch from 'node-fetch';
 
 @Injectable()
 export class UnitConversion {
@@ -13,13 +11,13 @@ export class UnitConversion {
 
     if (absValue >= 1e9) {
       value = percentage / 1e9;
-      unit = 'B';
+      unit = 'b';
     } else if (absValue >= 1e6) {
       value = percentage / 1e6;
-      unit = 'M';
+      unit = 'm';
     } else if (absValue >= 1e3) {
       value = percentage / 1e3;
-      unit = 'K';
+      unit = 'k';
     } else {
       value = percentage;
     }
@@ -28,7 +26,13 @@ export class UnitConversion {
     const formatted = parseFloat(value.toFixed(2)).toString();
 
     if (formatted === '0') {
-      return percentage.toFixed(8).toString();
+      const str = percentage.toFixed(8).toString();
+      console.log(str)
+      const result = str
+        .replace(/(\.\d*?[1-9])0+$/g, '$1')
+        .replace(/\.0+$/, '');
+
+      return result;
     }
     return `${formatted}${unit}`;
   }
