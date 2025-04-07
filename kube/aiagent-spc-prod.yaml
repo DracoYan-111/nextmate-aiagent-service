@@ -4,7 +4,7 @@ metadata:
   name: aiagent-spc-sa
   namespace: prod
   annotations:
-    cce.io/dew-resource: "[\"aiagent-prod\"]"
+    cce.io/dew-resource: "[\"aiagent-dev\"]"
 ---
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
