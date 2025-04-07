@@ -140,7 +140,7 @@ export class AgentTwitterService implements OnModuleInit {
       const prompt =
         '对于下面这段文案进行润色并生成合适的推文，上下文背景是用户在我们的预测市场平台活动上获得了奖金，活动链接是：' +
         tweetUrl +
-        '，我们的官方Twitter账号要发推文进行奖赏播报，优化后的推文要求：\n1、限制在200字以内 \n2、用户不需要@ \n3、推文内容要引人入胜，吸引用户点击推文里的活动链接 \n4、推文内容使用英文 \n5、推文内容一定要包含#PredictionMarket \n6、优化后的内容放在<<< >>>中， 要优化的文案内容是：\n' +
+        '，我们的官方Twitter账号要发推文进行奖赏播报，优化后的推文要求：\n1、限制在200字符 \n2、用户不需要@ \n3、推文内容要引人入胜，吸引用户点击推文里的活动链接 \n4、推文内容使用英文 \n5、推文内容一定要包含#PredictionMarket \n6、优化后的内容放在<<< >>>中且不要有空段落， 要优化的文案内容是：\n' +
         originalTweet;
       const polished_tweet = agent.prompt(prompt);
       if (!polished_tweet) {

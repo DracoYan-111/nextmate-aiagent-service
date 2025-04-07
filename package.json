@@ -1,7 +1,4 @@
 {
-  "resolutions": {
-    "agent-twitter-client": "github:timmyg/agent-twitter-client#main"
-  },
   "name": "nextmate-aiagrnt-server",
   "version": "0.0.1",
   "description": "",
