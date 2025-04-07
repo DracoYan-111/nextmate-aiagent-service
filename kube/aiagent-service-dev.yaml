@@ -49,8 +49,10 @@ spec:
               readOnly: true
             - name: writable-tmp
               mountPath: /app/tmp  # 挂载点是 /app/tmp
+            - name: llm-logs
+              mountPath: /app/llm_logs
           securityContext:
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
@@ -64,3 +66,5 @@ spec:
               secretProviderClass: "aiagent-spc"
         - name: writable-tmp
           emptyDir: {}  # K8s 自动创建一个内存临时目录
+        - name: llm-logs
+          emptyDir: {}
