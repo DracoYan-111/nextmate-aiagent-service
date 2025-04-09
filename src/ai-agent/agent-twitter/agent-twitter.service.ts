@@ -38,7 +38,6 @@ export class AgentTwitterService implements OnModuleInit {
 
   // 在模块初始化时自动登录 Twitter
   async onModuleInit() {
-    console.log(this.twitterUsername,this.twitterPassword,this.twitterEmail)
     const cookiesLoaded = await this.loadCookies();
     if (!cookiesLoaded) {
       await this.login(); // 如果加载失败，则执行登录
